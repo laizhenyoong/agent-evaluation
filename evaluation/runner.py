@@ -9,14 +9,15 @@ import argparse
 import json
 from collections.abc import Iterable
 
+from evaluation.contracts import EvaluationCase
 from evaluation.golden_dataset import GOLDEN_CASES
-from evaluation.models import EvaluationCase, EvaluationRun, ObservedToolCall, ScoreResult
 from evaluation.quality_judge import OllamaResponseJudge
-from evaluation.scoring import deterministic_score, trajectory_score
+from evaluation.scoring import ScoreResult, deterministic_score, trajectory_score
+from evaluation.traces import AgentTrace, ObservedToolCall
 from support_agent import build_agent, reset_demo_state
 
 
-def capture_run(case: EvaluationCase) -> EvaluationRun:
+def capture_run(case: EvaluationCase) -> AgentTrace:
     """Run a fresh agent and extract its tool-use blocks as the trajectory."""
     reset_demo_state()
     agent = build_agent()
@@ -32,7 +33,7 @@ def capture_run(case: EvaluationCase) -> EvaluationRun:
                         dict(tool_use.get("input", {})),
                     )
                 )
-    return EvaluationRun(case.case_id, answer, tuple(calls))
+    return AgentTrace(case.case_id, case.prompt, {}, tuple(calls), answer)
 
 
 def _summary(scores: Iterable[ScoreResult]) -> dict[str, object]:

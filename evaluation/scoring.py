@@ -7,13 +7,17 @@ unsafe path; that should still be a failed agent run.
 
 from collections import Counter
 
-from evaluation.models import (
-    EvaluationCase,
-    EvaluationRun,
-    ObservedToolCall,
-    ScoreResult,
-    ToolCallExpectation,
-)
+from dataclasses import dataclass
+
+from evaluation.contracts import EvaluationCase, ToolCallExpectation
+from evaluation.traces import AgentTrace, ObservedToolCall
+
+
+@dataclass(frozen=True)
+class ScoreResult:
+    passed: bool
+    score: float
+    reasons: tuple[str, ...]
 
 
 def _matches(call: ObservedToolCall, expected: ToolCallExpectation) -> bool:
@@ -27,7 +31,7 @@ def _matches(call: ObservedToolCall, expected: ToolCallExpectation) -> bool:
     )
 
 
-def deterministic_score(case: EvaluationCase, run: EvaluationRun) -> ScoreResult:
+def deterministic_score(case: EvaluationCase, run: AgentTrace) -> ScoreResult:
     """Check required calls and arguments, forbidden calls, bounds, and loops."""
     reasons: list[str] = []
     calls = run.tool_calls
@@ -45,7 +49,7 @@ def deterministic_score(case: EvaluationCase, run: EvaluationRun) -> ScoreResult
     return ScoreResult(not reasons, 1.0 if not reasons else 0.0, tuple(reasons))
 
 
-def trajectory_score(case: EvaluationCase, run: EvaluationRun) -> ScoreResult:
+def trajectory_score(case: EvaluationCase, run: AgentTrace) -> ScoreResult:
     """Score whether the path was economical and followed the intended order."""
     reasons: list[str] = []
     actual = tuple(call.name for call in run.tool_calls)

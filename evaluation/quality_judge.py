@@ -5,7 +5,9 @@ import os
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
-from evaluation.models import EvaluationCase, EvaluationRun, ScoreResult
+from evaluation.contracts import EvaluationCase
+from evaluation.scoring import ScoreResult
+from evaluation.traces import AgentTrace
 
 
 class OllamaResponseJudge:
@@ -15,7 +17,7 @@ class OllamaResponseJudge:
         self.host = (host or os.environ.get("OLLAMA_HOST", "http://localhost:11434")).rstrip("/")
         self.model = model or os.environ.get("EVAL_JUDGE_MODEL", "qwen3:30b")
 
-    def score(self, case: EvaluationCase, run: EvaluationRun) -> ScoreResult:
+    def score(self, case: EvaluationCase, run: AgentTrace) -> ScoreResult:
         prompt = f"""You are grading a customer-support agent response.
 Return only JSON with keys passed (boolean), score (number from 0 to 1), and reasons (array of short strings).
 
