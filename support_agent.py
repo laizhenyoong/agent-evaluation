@@ -124,15 +124,22 @@ def escalate(account_id: str, reason: str) -> str:
 # Deliberately minimal prompt: we want to see what the model does on its own.
 SYSTEM_PROMPT = "You are a customer support agent. Help the customer using your tools."
 
+DEFAULT_MODEL_ID = "qwen3:30b"
 
-def build_agent() -> Agent:
+
+def build_agent(model_id: str = DEFAULT_MODEL_ID, system_prompt: str = SYSTEM_PROMPT) -> Agent:
+    """Build the agent, letting an evaluation run vary the prompt or model.
+
+    Both knobs are recorded on every trace, so a pass-rate change is traceable
+    to the exact configuration that produced it.
+    """
     configure_tracing()
-    model = OllamaModel(host="http://localhost:11434", model_id="qwen3:30b")
+    model = OllamaModel(host="http://localhost:11434", model_id=model_id)
     # callback_handler=None: suppress token streaming so we can print a clean trajectory.
     return Agent(
         model=model,
         tools=[search_kb, check_account, create_ticket, escalate],
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=system_prompt,
         callback_handler=None,
     )
 

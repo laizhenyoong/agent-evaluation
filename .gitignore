@@ -2,3 +2,7 @@
 .phoenix/
 __pycache__/
 *.egg-info/
+
+# Generated evaluation runs; the committed baseline is the exception.
+results/*.jsonl
+!results/baseline.jsonl
